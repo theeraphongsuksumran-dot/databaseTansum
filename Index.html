@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบฐานข้อมูลทรัพยากรชุมชน ต.ตาลสุม - รพ.ตาลสุม</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    * { font-family: 'Prompt', sans-serif; }
+    body { background-color: #eef6ff; color: #1e293b; min-height: 100vh; }
+
+    /* Claymorphism Styling */
+    .clay-card {
+      background: #ffffff;
+      border-radius: 28px;
+      box-shadow: 
+        8px 12px 20px rgba(148, 163, 184, 0.25),
+        -6px -6px 12px rgba(255, 255, 255, 0.9),
+        inset 2px 2px 4px rgba(255, 255, 255, 1),
+        inset -3px -3px 6px rgba(203, 213, 225, 0.3);
+      transition: all 0.25s ease-in-out;
+    }
+
+    .clay-btn {
+      border-radius: 24px;
+      font-weight: 600;
+      box-shadow: 
+        5px 6px 12px rgba(0, 0, 0, 0.12),
+        inset 2px 2px 4px rgba(255, 255, 255, 0.6),
+        inset -2px -2px 4px rgba(0, 0, 0, 0.15);
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .clay-btn:active {
+      transform: scale(0.97);
+      box-shadow: 
+        2px 3px 6px rgba(0, 0, 0, 0.1),
+        inset 3px 3px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    .clay-badge {
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 
+        inset 1px 1px 2px rgba(255, 255, 255, 0.8),
+        inset -1px -1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Category Pastel Badges */
+    .cat-1 { background: #e0f2fe; color: #0369a1; }
+    .cat-2 { background: #fef3c7; color: #b45309; }
+    .cat-3 { background: #fce7f3; color: #be185d; }
+    .cat-4 { background: #dcfce7; color: #15803d; }
+    .cat-5 { background: #ffedd5; color: #c2410c; }
+    .cat-6 { background: #fee2e2; color: #b91c1c; }
+    .cat-7 { background: #e0e7ff; color: #4338ca; }
+    .cat-8 { background: #f3e8ff; color: #6b21a8; }
+    .cat-9 { background: #ccfbf1; color: #0f766e; }
+
+    /* Liquid Glass Inputs Only */
+    .liquid-input {
+      background: rgba(255, 255, 255, 0.65) !important;
+      backdrop-filter: blur(10px) !important;
+      -webkit-backdrop-filter: blur(10px) !important;
+      border: 1.5px solid rgba(255, 255, 255, 0.8) !important;
+      border-radius: 18px !important;
+      box-shadow: 
+        inset 2px 2px 5px rgba(0, 0, 0, 0.05),
+        inset -2px -2px 5px rgba(255, 255, 255, 0.9),
+        0 4px 10px rgba(0, 0, 0, 0.03) !important;
+      outline: none !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .liquid-input:focus {
+      background: rgba(255, 255, 255, 0.9) !important;
+      border-color: #3b82f6 !important;
+      box-shadow: 
+        0 0 0 4px rgba(59, 130, 246, 0.2),
+        inset 1px 1px 3px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+      border-radius: 0 32px 32px 0;
+    }
+
+    .nav-item { border-radius: 20px; transition: all 0.2s; }
+    .nav-item.active {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(8px);
+      border-left: 4px solid #38bdf8;
+      font-weight: 600;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+  </style>
+</head>
+<body class="flex flex-col md:flex-row min-h-screen">
+
+  <!-- Sidebar -->
+  <aside class="sidebar w-full md:w-72 p-6 text-white flex flex-col justify-between shrink-0 shadow-xl z-20">
+    <div>
+      <div class="flex items-center gap-3 mb-8 px-2">
+        <div class="w-12 h-12 bg-sky-500 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg">
+          <i class="fa-solid fa-hospital-user"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight">รพ.ตาลสุม</h1>
+          <p class="text-xs text-sky-300">ฐานข้อมูลทรัพยากรชุมชน</p>
+        </div>
+      </div>
+
+      <nav class="space-y-2">
+        <button onclick="switchTab('home')" id="nav-home" class="nav-item active w-full flex items-center gap-4 px-4 py-3.5 text-slate-200 hover:text-white">
+          <i class="fa-solid fa-house text-lg w-6"></i> หน้าแรก
+        </button>
+        <button onclick="switchTab('form')" id="nav-form" class="nav-item w-full flex items-center gap-4 px-4 py-3.5 text-slate-200 hover:text-white">
+          <i class="fa-solid fa-pen-to-square text-lg w-6"></i> กรอกข้อมูล
+        </button>
+        <button onclick="switchTab('view')" id="nav-view" class="nav-item w-full flex items-center gap-4 px-4 py-3.5 text-slate-200 hover:text-white">
+          <i class="fa-solid fa-table-list text-lg w-6"></i> ดูข้อมูล
+        </button>
+        <button onclick="switchTab('summary')" id="nav-summary" class="nav-item w-full flex items-center gap-4 px-4 py-3.5 text-slate-200 hover:text-white">
+          <i class="fa-solid fa-chart-pie text-lg w-6"></i> สรุปภาพรวม
+        </button>
+      </nav>
+    </div>
+
+    <div class="pt-6 border-t border-slate-700/60 text-xs text-slate-400 space-y-1 px-2">
+      <p><i class="fa-solid fa-location-dot text-sky-400 mr-1"></i> ต.ตาลสุม อ.ตาลสุม จ.อุบลราชธานี</p>
+      <p><i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> เชื่อมต่อ Google Sheets แล้ว</p>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+
+    <!-- Section 1: หน้าแรก -->
+    <section id="sec-home" class="space-y-6">
+      <div class="clay-card p-6 md:p-8 bg-gradient-to-r from-sky-500 to-blue-600 text-white relative overflow-hidden">
+        <div class="relative z-10 space-y-4">
+          <span class="clay-badge bg-white/20 text-white backdrop-blur-md">ระบบสารสนเทศสาธารณสุข</span>
+          <h2 class="text-2xl md:text-3xl font-bold">ฐานข้อมูลทรัพยากรชุมชน ต.ตาลสุม</h2>
+          <p class="text-sky-100 text-sm max-w-2xl">จัดเก็บและรวบรวมสถิติทรัพยากรสำคัญ 9 หมวดหมู่ ครอบคลุม 8 หมู่บ้าน เพื่อการสนับสนุนการปฏิบัติงานสาธารณสุขและการวางแผนยุทธศาสตร์</p>
+
+          <div class="pt-2 flex flex-col md:flex-row gap-3">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="homeSearchInput" onkeyup="filterHomeCards()" placeholder="ค้นหาหมวดหมู่หรือทรัพยากร..." class="liquid-input w-full pl-11 pr-4 py-3 text-slate-800 text-sm placeholder-slate-400">
+            </div>
+            <div class="w-full md:w-64">
+              <input type="text" id="globalReporter" placeholder="ชื่อผู้บันทึก (เจ้าหน้าที่)" class="liquid-input w-full px-4 py-3 text-slate-800 text-sm placeholder-slate-400 font-medium" value="เจ้าหน้าที่ รพ.ตาลสุม">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Panel -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="homeStatsPanel">
+        <div class="clay-card p-5 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-cubes"></i></div>
+          <div>
+            <p class="text-xs text-slate-500 font-medium">ทรัพยากรรวม</p>
+            <h3 class="text-2xl font-bold text-slate-800" id="statGrandTotal">-</h3>
+          </div>
+        </div>
+        <div class="clay-card p-5 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-tree-city"></i></div>
+          <div>
+            <p class="text-xs text-slate-500 font-medium">ครอบคลุม</p>
+            <h3 class="text-2xl font-bold text-slate-800">8 หมู่บ้าน</h3>
+          </div>
+        </div>
+        <div class="clay-card p-5 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-layer-group"></i></div>
+          <div>
+            <p class="text-xs text-slate-500 font-medium">หมวดหมู่</p>
+            <h3 class="text-2xl font-bold text-slate-800">9 หมวด</h3>
+          </div>
+        </div>
+        <div class="clay-card p-5 flex items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-xl font-bold"><i class="fa-solid fa-hospital"></i></div>
+          <div>
+            <p class="text-xs text-slate-500 font-medium">หน่วยงาน</p>
+            <h3 class="text-sm font-bold text-slate-800">รพ.ตาลสุม</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9 Category Cards -->
+      <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2 pt-2">
+        <i class="fa-solid fa-grid-2 text-sky-600"></i> หมวดหมู่ทรัพยากรชุมชน
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="categoryGrid">
+        <div class="clay-card p-6 cursor-pointer hover:-translate-y-1.5 category-card" onclick="openCategoryForm('1.วัด')">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-14 h-14 rounded-2xl cat-1 flex items-center justify-center text-2xl"><i class="fa-solid fa-gopuram"></i></div>
+            <span class="clay-badge cat-1">01</span>
+          </div>
+          <h4 class="text-lg font-bold text-slate-800">1. วัด / สำนักสงฆ์</h4>
+          <p class="text-xs text-slate-500 mt-1">ข้อมูลพระ เณร และรายชื่อรายบุคคล</p>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-sm">
+            <span class="text-slate-500">จำนวนบันทึก</span>
+            <span class="font-bold text-sky-600 font-mono text-base" id="count-1.วัด">0</span>
+          </div>
+        </div>
+
+        <div class="clay-card p-6 cursor-pointer hover:-translate-y-1.5 category-card" onclick="openCategoryForm('2.โรงเรียน')">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-14 h-14 rounded-2xl cat-2 flex items-center justify-center text-2xl"><i class="fa-solid fa-school"></i></div>
+            <span class="clay-badge cat-2">02</span>
+          </div>
+          <h4 class="text-lg font-bold text-slate-800">2. โรงเรียน</h4>
+          <p class="text-xs text-slate-500 mt-1">จำนวนนักเรียนแยกชั้น ชาย/หญิง ครูผู้รับผิดชอบ</p>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-sm">
+            <span class="text-slate-500">จำนวนบันทึก</span>
+            <span class="font-bold text-amber-600 font-mono text-base" id="count-2.โรงเรียน">0</span>
+          </div>
+        </div>
+
+        <div class="clay-card p-6 cursor-pointer hover:-translate-y-1.5 category-card" onclick="openCategoryForm('3.ศูนย์เด็กเล็ก')">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-14 h-14 rounded-2xl cat-3 flex items-center justify-center text-2xl"><i class="fa-solid fa-child"></i></div>
+            <span class="clay-badge cat-3">03</span>
+          </div>
+          <h4 class="text-lg font-bold text-slate-800">3. ศูนย์พัฒนาเด็กเล็ก</h4>
+          <p class="text-xs text-slate-500 mt-1">เด็กปฐมวัย ชาย/หญิง ครูดูแล</p>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-sm">
+            <span class="text-slate-500">จำนวนบันทึก</span>
+            <span class="font-bold text-pink-600 font-mono text-base" id="count-3.ศูนย์เด็กเล็ก">0</span>
+          </div>
+        </div>
+
+        <div class="clay-card p-6 cursor-pointer hover:-translate-y-1.5 category-card" onclick="openCategoryForm('4.ร้านค้า_ร้านชำ')">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-14 h-14 rounded-2xl cat-4 flex items-center justify-center text-2xl"><i class="fa-solid fa-store"></i></div>
+            <span class="clay-badge cat-4">04</span>
+          </div>
+          <h4 class="text-lg font-bold text-slate-800">4. ร้านค้า / ร้านชำ</h4>
+          <p class="text-xs text-slate-500 mt-1">ร้านขายของชำและร้านค้าทั่วไป</p>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-sm">
+            <span class="text-slate-500">จำนวนบันทึก</span>
+            <span class="font-bold text-emerald-600 font-mono text-base" id="count-4.ร้านค้า_ร้านชำ">0</span>
+          </div>
+        </div>
+
+        <div class="clay-card p-6 cursor-pointer hover:-translate-y-1.5 category-card" onclick="openCategoryForm('5.แผงลอย')">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-14 h-14 rounded-2xl cat-5 flex items-center justify-center text-2xl"><i class="fa-solid fa-basket-shopping"></i></div>
+            <span class="clay-badge cat-5">05</span>
+          </div>
+          <h4 class="text-lg font-bold text-slate-800">5. แผงลอย / ตลาดนัด</h4>
+          <p class="text-xs text-slate-500 mt-1">พ่อค้าแม่ค้าแผงลอย สินค้าที่ขาย</p>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-sm">
+            <span class="text-slate-500">จำนวนบันทึก</span>
+            <span class="font-bold text-orange-600 font-mono text-base" id="count-5.แผงลอย">0</span>
+          </div>
+        </div>
+
+        <div class="clay-card p-6 cursor-pointer hover:-translate-y-1.5 category-card" onclick="openCategoryForm('6.ร้านอาหาร')">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-14 h-14 rounded-2xl cat-6 flex items-center justify-center text-2xl"><i class="fa-solid fa-utensils"></i></div>
+            <span class="clay-badge cat-6">06</span>
+          </div>
+          <h4 class="text-lg font-bold text-slate-800">6. ร้านอาหาร / สุขาภิบาล</h4>
+          <p class="text-xs text-slate-500 mt-1">ร้านอาหารตามสั่ง ร้านก๋วยเตี๋ยว</p>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-sm">
+            <span class="text-slate-500">จำนวนบันทึก</span>
+            <span class="font-bold text-red-600 font-mono text-base" id="count-6.ร้านอาหาร">0</span>
+          </div>
+        </div>
+
+        <div class="clay-card p-6 cursor-pointer hover:-translate-y-1.5 category-card" onclick="openCategoryForm('7.ร้านกาแฟ_คาเฟ่')">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-14 h-14 rounded-2xl cat-7 flex items-center justify-center text-2xl"><i class="fa-solid fa-mug-hot"></i></div>
+            <span class="clay-badge cat-7">07</span>
+          </div>
+          <h4 class="text-lg font-bold text-slate-800">7. ร้านกาแฟ / คาเฟ่</h4>
+          <p class="text-xs text-slate-500 mt-1">ร้านเครื่องดื่ม ชา กาแฟ</p>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-sm">
+            <span class="text-slate-500">จำนวนบันทึก</span>
+            <span class="font-bold text-indigo-600 font-mono text-base" id="count-7.ร้านกาแฟ_คาเฟ่">0</span>
+          </div>
+        </div>
+
+        <div class="clay-card p-6 cursor-pointer hover:-translate-y-1.5 category-card" onclick="openCategoryForm('8.ปั๊มน้ำมัน')">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-14 h-14 rounded-2xl cat-8 flex items-center justify-center text-2xl"><i class="fa-solid fa-gas-pump"></i></div>
+            <span class="clay-badge cat-8">08</span>
+          </div>
+          <h4 class="text-lg font-bold text-slate-800">8. ปั๊มน้ำมัน / ปั๊มหลอด</h4>
+          <p class="text-xs text-slate-500 mt-1">สถานีบริการน้ำมันและจุดบริการเชื้อเพลิง</p>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-sm">
+            <span class="text-slate-500">จำนวนบันทึก</span>
+            <span class="font-bold text-purple-600 font-mono text-base" id="count-8.ปั๊มน้ำมัน">0</span>
+          </div>
+        </div>
+
+        <div class="clay-card p-6 cursor-pointer hover:-translate-y-1.5 category-card" onclick="openCategoryForm('9.ร้านเสริมสวย')">
+          <div class="flex justify-between items-start mb-4">
+            <div class="w-14 h-14 rounded-2xl cat-9 flex items-center justify-center text-2xl"><i class="fa-solid fa-scissors"></i></div>
+            <span class="clay-badge cat-9">09</span>
+          </div>
+          <h4 class="text-lg font-bold text-slate-800">9. ร้านเสริมสวย / ตัดผม</h4>
+          <p class="text-xs text-slate-500 mt-1">ร้านตัดผมชาย ร้านเสริมสวยหญิง</p>
+          <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-sm">
+            <span class="text-slate-500">จำนวนบันทึก</span>
+            <span class="font-bold text-teal-600 font-mono text-base" id="count-9.ร้านเสริมสวย">0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: ฟอร์มกรอกข้อมูล -->
+    <section id="sec-form" class="hidden space-y-6 max-w-4xl mx-auto">
+      <div class="flex items-center justify-between">
+        <button onclick="switchTab('home')" class="clay-btn bg-slate-200 text-slate-700 px-4 py-2 text-sm">
+          <i class="fa-solid fa-arrow-left"></i> กลับย้อนกลับ
+        </button>
+        <span class="clay-badge bg-sky-100 text-sky-700" id="formModeBadge">แบบฟอร์มเพิ่มข้อมูล</span>
+      </div>
+
+      <div class="clay-card p-6 md:p-8 space-y-6">
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-2">เลือกหมวดหมู่ทรัพยากร <span class="text-red-500">*</span></label>
+          <select id="formCategory" onchange="renderFormFields(this.value)" class="liquid-input w-full p-3 text-slate-800 font-semibold">
+            <option value="1.วัด">1. วัด / สำนักสงฆ์</option>
+            <option value="2.โรงเรียน">2. โรงเรียน</option>
+            <option value="3.ศูนย์เด็กเล็ก">3. ศูนย์พัฒนาเด็กเล็ก</option>
+            <option value="4.ร้านค้า_ร้านชำ">4. ร้านค้า / ร้านชำ</option>
+            <option value="5.แผงลอย">5. แผงลอย / ตลาดนัด</option>
+            <option value="6.ร้านอาหาร">6. ร้านอาหาร</option>
+            <option value="7.ร้านกาแฟ_คาเฟ่">7. ร้านกาแฟ / คาเฟ่</option>
+            <option value="8.ปั๊มน้ำมัน">8. ปั๊มน้ำมัน</option>
+            <option value="9.ร้านเสริมสวย">9. ร้านเสริมสวย</option>
+          </select>
+        </div>
+
+        <form id="resourceForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
+          <input type="hidden" id="editRecordId" value="">
+
+          <div class="bg-sky-50/60 p-4 rounded-2xl border border-sky-100">
+            <label class="block text-sm font-bold text-slate-700 mb-1">หมู่บ้าน (ต.ตาลสุม 8 หมู่) <span class="text-red-500">*</span></label>
+            <select id="fieldVillage" required class="liquid-input w-full p-3 text-slate-800 font-medium">
+              <option value="">-- กรุณาเลือกหมู่บ้าน --</option>
+            </select>
+          </div>
+
+          <div id="dynamicFormFields" class="space-y-4"></div>
+
+          <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+            <button type="button" onclick="resetForm()" class="clay-btn bg-slate-100 text-slate-600 px-6 py-3">
+              <i class="fa-solid fa-rotate-left"></i> ล้างข้อมูล
+            </button>
+            <button type="submit" id="btnSubmit" class="clay-btn bg-sky-600 hover:bg-sky-700 text-white px-8 py-3 text-base">
+              <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกลง Google Sheets
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Section 3: ดูข้อมูล / ตาราง -->
+    <section id="sec-view" class="hidden space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-800">ตารางข้อมูลทรัพยากรชุมชน</h2>
+          <p class="text-xs text-slate-500">เรียกดู แก้ไข ลบ และค้นหาข้อมูลตามหมวดและหมู่บ้าน</p>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-3">
+          <select id="viewCategoryFilter" onchange="fetchTableData()" class="liquid-input p-2.5 text-sm font-medium text-slate-800">
+            <option value="1.วัด">1. วัด</option>
+            <option value="2.โรงเรียน">2. โรงเรียน</option>
+            <option value="3.ศูนย์เด็กเล็ก">3. ศูนย์เด็กเล็ก</option>
+            <option value="4.ร้านค้า_ร้านชำ">4. ร้านค้า/ร้านชำ</option>
+            <option value="5.แผงลอย">5. แผงลอย</option>
+            <option value="6.ร้านอาหาร">6. ร้านอาหาร</option>
+            <option value="7.ร้านกาแฟ_คาเฟ่">7. ร้านกาแฟ/คาเฟ่</option>
+            <option value="8.ปั๊มน้ำมัน">8. ปั๊มน้ำมัน</option>
+            <option value="9.ร้านเสริมสวย">9. ร้านเสริมสวย</option>
+          </select>
+
+          <select id="viewVillageFilter" onchange="fetchTableData()" class="liquid-input p-2.5 text-sm font-medium text-slate-800">
+            <option value="">ทุกหมู่บ้าน (8 หมู่)</option>
+          </select>
+
+          <input type="text" id="tableSearch" onkeyup="filterTableRows()" placeholder="ค้นหาชื่อ/ข้อความ..." class="liquid-input p-2.5 text-sm text-slate-800">
+        </div>
+      </div>
+
+      <div class="clay-card p-6 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-slate-700" id="dataTable">
+            <thead class="bg-slate-100 text-slate-800 text-xs uppercase font-bold border-b border-slate-200" id="tableHead"></thead>
+            <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+        <div id="tableLoading" class="py-12 text-center text-slate-400 hidden">
+          <i class="fa-solid fa-spinner fa-spin text-3xl mb-2 text-sky-500"></i>
+          <p class="text-sm">กำลังโหลดข้อมูลจาก Google Sheets...</p>
+        </div>
+        <div id="tableEmpty" class="py-12 text-center text-slate-400 hidden">
+          <i class="fa-solid fa-folder-open text-4xl mb-2 text-slate-300"></i>
+          <p class="text-sm">ไม่พบข้อมูลในหมวดหรือหมู่บ้านที่เลือก</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: สรุปภาพรวม -->
+    <section id="sec-summary" class="hidden space-y-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-800">สรุปภาพรวมทรัพยากร ต.ตาลสุม</h2>
+          <p class="text-xs text-slate-500">แผนภูมิตัวเลขและสถิติเปรียบเทียบจำแนกตามหมู่บ้าน</p>
+        </div>
+        <button onclick="loadSummaryData()" class="clay-btn bg-white text-sky-600 px-4 py-2 text-sm">
+          <i class="fa-solid fa-arrows-rotate"></i> อัปเดตสถิติ
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="clay-card p-6 lg:col-span-2 space-y-4">
+          <h4 class="font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-chart-column text-sky-500"></i> จำนวนทรัพยากรจำแนกตามหมู่บ้าน
+          </h4>
+          <div class="relative h-72"><canvas id="barChart"></canvas></div>
+        </div>
+
+        <div class="clay-card p-6 space-y-4">
+          <h4 class="font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-pink-500"></i> สัดส่วนทรัพยากร 9 หมวด
+          </h4>
+          <div class="relative h-72 flex items-center justify-center"><canvas id="doughnutChart"></canvas></div>
+        </div>
+      </div>
+
+      <div class="clay-card p-6 space-y-4">
+        <h4 class="font-bold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-table text-emerald-600"></i> ตารางสรุปจำนวนจำแนกตามหมู่บ้านและหมวดหมู่ (Matrix)
+        </h4>
+        <div class="overflow-x-auto">
+          <table class="w-full text-center text-xs border-collapse" id="matrixTable">
+            <thead>
+              <tr class="bg-slate-800 text-white font-bold">
+                <th class="p-3 text-left">หมู่บ้าน</th>
+                <th class="p-2">1.วัด</th>
+                <th class="p-2">2.รร.</th>
+                <th class="p-2">3.ศพด.</th>
+                <th class="p-2">4.ร้านชำ</th>
+                <th class="p-2">5.แผงลอย</th>
+                <th class="p-2">6.อาหาร</th>
+                <th class="p-2">7.คาเฟ่</th>
+                <th class="p-2">8.ปั๊ม</th>
+                <th class="p-2">9.เสริมสวย</th>
+                <th class="p-2 bg-sky-700">รวม</th>
+              </tr>
+            </thead>
+            <tbody id="matrixBody" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    let VILLAGES = [];
+    let CATEGORIES = [];
+    let currentCategoryData = [];
+    let barChartInstance = null;
+    let doughnutChartInstance = null;
+
+    window.addEventListener('DOMContentLoaded', () => { initApp(); });
+
+    function initApp() {
+      google.script.run
+        .withSuccessHandler(data => {
+          if (data && data.villages) {
+            VILLAGES = data.villages;
+            CATEGORIES = data.categories;
+            populateVillageOptions();
+            updateDashboardStats(data.stats);
+            renderFormFields('1.วัด');
+          }
+        })
+        .withFailureHandler(err => {
+          console.error("initApp Error: ", err);
+          alert("เกิดข้อผิดพลาดในการโหลดข้อมูลเริ่มต้น: " + err.message);
+        })
+        .getInitialData();
+    }
+
+    function populateVillageOptions() {
+      const formSel = document.getElementById('fieldVillage');
+      const viewSel = document.getElementById('viewVillageFilter');
+
+      if (!formSel || !viewSel) return;
+
+      formSel.innerHTML = '<option value="">-- กรุณาเลือกหมู่บ้าน --</option>';
+      viewSel.innerHTML = '<option value="">ทุกหมู่บ้าน (8 หมู่)</option>';
+
+      VILLAGES.forEach(v => {
+        formSel.innerHTML += `<option value="${v}">${v}</option>`;
+        viewSel.innerHTML += `<option value="${v}">${v}</option>`;
+      });
+    }
+
+    function switchTab(tabName) {
+      ['home', 'form', 'view', 'summary'].forEach(t => {
+        const sec = document.getElementById(`sec-${t}`);
+        const nav = document.getElementById(`nav-${t}`);
+        if (sec) sec.classList.add('hidden');
+        if (nav) nav.classList.remove('active');
+      });
+
+      const activeSec = document.getElementById(`sec-${tabName}`);
+      const activeNav = document.getElementById(`nav-${tabName}`);
+      if (activeSec) activeSec.classList.remove('hidden');
+      if (activeNav) activeNav.classList.add('active');
+
+      if (tabName === 'view') fetchTableData();
+      if (tabName === 'summary') loadSummaryData();
+    }
+
+    function openCategoryForm(catName) {
+      const catSelect = document.getElementById('formCategory');
+      if (catSelect) catSelect.value = catName;
+      renderFormFields(catName);
+      switchTab('form');
+    }
+
+    function renderFormFields(category) {
+      const container = document.getElementById('dynamicFormFields');
+      if (!container) return;
+      container.innerHTML = '';
+      
+      const modeBadge = document.getElementById('formModeBadge');
+      const editId = document.getElementById('editRecordId');
+      if (modeBadge && editId && !editId.value) {
+        modeBadge.innerText = "แบบฟอร์มเพิ่มข้อมูล: " + category;
+      }
+
+      switch (category) {
+        case '1.วัด':
+          container.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="md:col-span-2">
+                <label class="block text-sm font-bold text-slate-700 mb-1">ชื่อวัด / สำนักสงฆ์ <span class="text-red-500">*</span></label>
+                <input type="text" id="f_name" required class="liquid-input w-full p-3 text-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1">บ้านเลขที่ / ที่อยู่วัด</label>
+                <input type="text" id="f_address" placeholder="เช่น 123 ม.1" class="liquid-input w-full p-3 text-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1">จำนวนพระ (รูป)</label>
+                <input type="number" min="0" id="f_monks" value="0" class="liquid-input w-full p-3 text-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1">จำนวนเณร (รูป)</label>
+                <input type="number" min="0" id="f_novices" value="0" class="liquid-input w-full p-3 text-sm">
+              </div>
+            </div>
+            <div class="pt-4 border-t border-slate-200 space-y-3">
+              <div class="flex justify-between items-center">
+                <label class="font-bold text-sm text-slate-700"><i class="fa-solid fa-users text-sky-500"></i> รายชื่อพระ/เณร รายบุคคล</label>
+                <button type="button" onclick="addMonkRow()" class="clay-btn bg-sky-100 text-sky-700 px-3 py-1.5 text-xs"><i class="fa-solid fa-plus"></i> เพิ่มแถว</button>
+              </div>
+              <div id="subItemsContainer" class="space-y-2"></div>
+            </div>
+          `;
+          break;
+
+        case '2.โรงเรียน':
+          container.innerHTML = `
+            <div class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-bold text-slate-700 mb-1">ชื่อโรงเรียน <span class="text-red-500">*</span></label>
+                  <input type="text" id="f_name" required class="liquid-input w-full p-3 text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-slate-700 mb-1">บ้านเลขที่ / ที่อยู่</label>
+                  <input type="text" id="f_address" class="liquid-input w-full p-3 text-sm">
+                </div>
+              </div>
+              <div class="p-4 bg-amber-50/50 rounded-2xl border border-amber-100 space-y-3">
+                <p class="font-bold text-xs text-amber-800">จำนวนนักเรียนแยกระดับชั้น (คน)</p>
+                <div class="grid grid-cols-3 md:grid-cols-6 gap-3 text-xs">
+                  <div><label>อนุบาล 1</label><input type="number" min="0" id="f_k1" value="0" class="liquid-input w-full p-2 mt-1"></div>
+                  <div><label>อนุบาล 2</label><input type="number" min="0" id="f_k2" value="0" class="liquid-input w-full p-2 mt-1"></div>
+                  <div><label>อนุบาล 3</label><input type="number" min="0" id="f_k3" value="0" class="liquid-input w-full p-2 mt-1"></div>
+                  <div><label>ป.1</label><input type="number" min="0" id="f_p1" value="0" class="liquid-input w-full p-2 mt-1"></div>
+                  <div><label>ป.2</label><input type="number" min="0" id="f_p2" value="0" class="liquid-input w-full p-2 mt-1"></div>
+                  <div><label>ป.3</label><input type="number" min="0" id="f_p3" value="0" class="liquid-input w-full p-2 mt-1"></div>
+                  <div><label>ป.4</label><input type="number" min="0" id="f_p4" value="0" class="liquid-input w-full p-2 mt-1"></div>
+                  <div><label>ป.5</label><input type="number" min="0" id="f_p5" value="0" class="liquid-input w-full p-2 mt-1"></div>
+                  <div><label>ป.6</label><input type="number" min="0" id="f_p6" value="0" class="liquid-input w-full p-2 mt-1"></div>
+                  <div><label>ม.1</label><input type="number" min="0" id="f_m1" value="0" class="liquid-input w-full p-2 mt-1"></div>
+                  <div><label>ม.2</label><input type="number" min="0" id="f_m2" value="0" class="liquid-input w-full p-2 mt-1"></div>
+                  <div><label>ม.3</label><input type="number" min="0" id="f_m3" value="0" class="liquid-input w-full p-2 mt-1"></div>
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-4 bg-sky-50/50 p-4 rounded-2xl border border-sky-100">
+                <div>
+                  <label class="block text-sm font-bold text-slate-700 mb-1">ชาย (คน) <span class="text-red-500">*</span></label>
+                  <input type="number" min="0" id="f_male" required value="0" class="liquid-input w-full p-3 text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-slate-700 mb-1">หญิง (คน) <span class="text-red-500">*</span></label>
+                  <input type="number" min="0" id="f_female" required value="0" class="liquid-input w-full p-3 text-sm">
+                </div>
+              </div>
+              <div class="pt-2 space-y-3">
+                <div class="flex justify-between items-center">
+                  <label class="font-bold text-sm text-slate-700"><i class="fa-solid fa-chalkboard-user text-amber-600"></i> ครูผู้รับผิดชอบงานสาธารณสุข</label>
+                  <button type="button" onclick="addTeacherRow()" class="clay-btn bg-amber-100 text-amber-800 px-3 py-1.5 text-xs"><i class="fa-solid fa-plus"></i> เพิ่มครู</button>
+                </div>
+                <div id="teachersContainer" class="space-y-2"></div>
+              </div>
+            </div>
+          `;
+          break;
+
+        case '3.ศูนย์เด็กเล็ก':
+          container.innerHTML = `
+            <div class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-bold text-slate-700 mb-1">ชื่อศูนย์พัฒนาเด็กเล็ก <span class="text-red-500">*</span></label>
+                  <input type="text" id="f_name" required class="liquid-input w-full p-3 text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-slate-700 mb-1">บ้านเลขที่ / ที่อยู่</label>
+                  <input type="text" id="f_address" class="liquid-input w-full p-3 text-sm">
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-3 p-4 bg-pink-50/50 rounded-2xl border border-pink-100 text-xs">
+                <div><label class="font-bold">เตรียมอนุบาล/ชั้น 1</label><input type="number" min="0" id="f_c1" value="0" class="liquid-input w-full p-2 mt-1"></div>
+                <div><label class="font-bold">ชั้น 2</label><input type="number" min="0" id="f_c2" value="0" class="liquid-input w-full p-2 mt-1"></div>
+                <div><label class="font-bold">ชั้น 3</label><input type="number" min="0" id="f_c3" value="0" class="liquid-input w-full p-2 mt-1"></div>
+              </div>
+              <div class="grid grid-cols-2 gap-4 bg-sky-50/50 p-4 rounded-2xl border border-sky-100">
+                <div>
+                  <label class="block text-sm font-bold text-slate-700 mb-1">ชาย (คน) <span class="text-red-500">*</span></label>
+                  <input type="number" min="0" id="f_male" required value="0" class="liquid-input w-full p-3 text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm font-bold text-slate-700 mb-1">หญิง (คน) <span class="text-red-500">*</span></label>
+                  <input type="number" min="0" id="f_female" required value="0" class="liquid-input w-full p-3 text-sm">
+                </div>
+              </div>
+              <div class="pt-2 space-y-3">
+                <div class="flex justify-between items-center">
+                  <label class="font-bold text-sm text-slate-700"><i class="fa-solid fa-heart text-pink-500"></i> ครู/ผู้ดูแลเด็ก</label>
+                  <button type="button" onclick="addTeacherRow()" class="clay-btn bg-pink-100 text-pink-700 px-3 py-1.5 text-xs"><i class="fa-solid fa-plus"></i> เพิ่มครู</button>
+                </div>
+                <div id="teachersContainer" class="space-y-2"></div>
+              </div>
+            </div>
+          `;
+          break;
+
+        case '5.แผงลอย':
+          container.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1">ชื่อคนขาย / แม่ค้า <span class="text-red-500">*</span></label>
+                <input type="text" id="f_seller" required class="liquid-input w-full p-3 text-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1">บ้านเลขที่ / ที่อยู่ผู้ขาย</label>
+                <input type="text" id="f_address" class="liquid-input w-full p-3 text-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1">สินค้าที่ขาย / ขายอะไร <span class="text-red-500">*</span></label>
+                <input type="text" id="f_products" required placeholder="เช่น ผักสด, ผลไม้" class="liquid-input w-full p-3 text-sm">
+              </div>
+            </div>
+          `;
+          break;
+
+        case '6.ร้านอาหาร':
+          container.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1">ชื่อร้านอาหาร <span class="text-red-500">*</span></label>
+                <input type="text" id="f_name" required class="liquid-input w-full p-3 text-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1">ประเภทอาหารที่ขาย</label>
+                <input type="text" id="f_products" placeholder="เช่น อาหารตามสั่ง, ก๋วยเตี๋ยว" class="liquid-input w-full p-3 text-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1">เจ้าของร้าน / ผู้ดูแล</label>
+                <input type="text" id="f_owner" class="liquid-input w-full p-3 text-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1">เบอร์โทรศัพท์ (9-10 หลัก)</label>
+                <input type="tel" id="f_phone" placeholder="08XXXXXXXX" class="liquid-input w-full p-3 text-sm">
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-bold text-slate-700 mb-1">บ้านเลขที่ / ที่ตั้งร้าน</label>
+                <input type="text" id="f_address" class="liquid-input w-full p-3 text-sm">
+              </div>
+            </div>
+          `;
+          break;
+
+        default:
+          const labelMap = {
+            '4.ร้านค้า_ร้านชำ': 'ร้านค้า/ร้านชำ',
+            '7.ร้านกาแฟ_คาเฟ่': 'ร้านกาแฟ/คาเฟ่',
+            '8.ปั๊มน้ำมัน': 'จุดที่ตั้ง/ชื่อสถานีปั๊ม',
+            '9.ร้านเสริมสวย': 'ร้านเสริมสวย/ตัดผม'
+          };
+          container.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="md:col-span-2">
+                <label class="block text-sm font-bold text-slate-700 mb-1">ชื่อ${labelMap[category] || 'สถานที่'} <span class="text-red-500">*</span></label>
+                <input type="text" id="f_name" required class="liquid-input w-full p-3 text-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1">เจ้าของ / ผู้ดูแล</label>
+                <input type="text" id="f_owner" class="liquid-input w-full p-3 text-sm">
+              </div>
+              <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1">เบอร์โทรศัพท์ (9-10 หลัก)</label>
+                <input type="tel" id="f_phone" placeholder="08XXXXXXXX" class="liquid-input w-full p-3 text-sm">
+              </div>
+              <div class="md:col-span-2">
+                <label class="block text-sm font-bold text-slate-700 mb-1">บ้านเลขที่ / ที่อยู่</label>
+                <input type="text" id="f_address" class="liquid-input w-full p-3 text-sm">
+              </div>
+            </div>
+          `;
+          break;
+      }
+    }
+
+    function addMonkRow(name = '', age = '', role = '', phone = '', address = '') {
+      const container = document.getElementById('subItemsContainer');
+      if (!container) return;
+      const div = document.createElement('div');
+      div.className = 'grid grid-cols-12 gap-2 items-center bg-slate-50 p-2 rounded-xl';
+      div.innerHTML = `
+        <div class="col-span-3"><input type="text" placeholder="ชื่อ-สกุล" value="${name}" class="sub-name liquid-input w-full p-2 text-xs"></div>
+        <div class="col-span-2"><input type="number" placeholder="อายุ" value="${age}" class="sub-age liquid-input w-full p-2 text-xs"></div>
+        <div class="col-span-2"><input type="text" placeholder="ตำแหน่ง" value="${role}" class="sub-role liquid-input w-full p-2 text-xs"></div>
+        <div class="col-span-2"><input type="tel" placeholder="เบอร์โทร" value="${phone}" class="sub-phone liquid-input w-full p-2 text-xs"></div>
+        <div class="col-span-2"><input type="text" placeholder="บ้านเลขที่/ที่อยู่" value="${address}" class="sub-address liquid-input w-full p-2 text-xs"></div>
+        <div class="col-span-1 text-center"><button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></div>
+      `;
+      container.appendChild(div);
+    }
+
+    function addTeacherRow(name = '', phone = '') {
+      const container = document.getElementById('teachersContainer');
+      if (!container) return;
+      const div = document.createElement('div');
+      div.className = 'grid grid-cols-12 gap-2 items-center bg-slate-50 p-2 rounded-xl';
+      div.innerHTML = `
+        <div class="col-span-6"><input type="text" placeholder="ชื่อ-สกุลครูผู้รับผิดชอบ" value="${name}" class="teacher-name liquid-input w-full p-2 text-xs"></div>
+        <div class="col-span-5"><input type="tel" placeholder="เบอร์โทรศัพท์" value="${phone}" class="teacher-phone liquid-input w-full p-2 text-xs"></div>
+        <div class="col-span-1 text-center"><button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button></div>
+      `;
+      container.appendChild(div);
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      
+      const categoryElem = document.getElementById('formCategory');
+      const villageElem = document.getElementById('fieldVillage');
+      const reporterElem = document.getElementById('globalReporter');
+      const editIdElem = document.getElementById('editRecordId');
+
+      const category = categoryElem ? categoryElem.value : '';
+      const village = villageElem ? villageElem.value : '';
+      const reporter = reporterElem ? reporterElem.value : "เจ้าหน้าที่ รพ.ตาลสุม";
+
+      if (!village) {
+        alert("กรุณาเลือกหมู่บ้านก่อนบันทึก");
+        return;
+      }
+
+      let payload = {
+        category: category,
+        village: village,
+        reporter: reporter,
+        id: editIdElem ? editIdElem.value : '',
+        address: document.getElementById('f_address') ? document.getElementById('f_address').value : ''
+      };
+
+      const checkPhone = (p) => {
+        if (!p) return true;
+        const clean = p.replace(/[^0-9]/g, '');
+        return clean.length >= 9 && clean.length <= 10;
+      };
+
+      if (category === '1.วัด') {
+        payload.name = document.getElementById('f_name') ? document.getElementById('f_name').value : '';
+        payload.monks = document.getElementById('f_monks') ? document.getElementById('f_monks').value : 0;
+        payload.novices = document.getElementById('f_novices') ? document.getElementById('f_novices').value : 0;
+        payload.subItems = [];
+        document.querySelectorAll('#subItemsContainer > div').forEach(row => {
+          const p = row.querySelector('.sub-phone').value;
+          if (p && !checkPhone(p)) alert(`เบอร์โทรศัพท์ ${p} ไม่ถูกต้อง (ต้องเป็น 9-10 หลัก)`);
+          payload.subItems.push({
+            name: row.querySelector('.sub-name').value,
+            age: row.querySelector('.sub-age').value,
+            role: row.querySelector('.sub-role').value,
+            phone: p,
+            address: row.querySelector('.sub-address').value
+          });
+        });
+
+      } else if (category === '2.โรงเรียน') {
+        payload.name = document.getElementById('f_name') ? document.getElementById('f_name').value : '';
+        payload.k1 = document.getElementById('f_k1').value; payload.k2 = document.getElementById('f_k2').value; payload.k3 = document.getElementById('f_k3').value;
+        payload.p1 = document.getElementById('f_p1').value; payload.p2 = document.getElementById('f_p2').value; payload.p3 = document.getElementById('f_p3').value;
+        payload.p4 = document.getElementById('f_p4').value; payload.p5 = document.getElementById('f_p5').value; payload.p6 = document.getElementById('f_p6').value;
+        payload.m1 = document.getElementById('f_m1').value; payload.m2 = document.getElementById('f_m2').value; payload.m3 = document.getElementById('f_m3').value;
+        payload.male = Number(document.getElementById('f_male').value || 0);
+        payload.female = Number(document.getElementById('f_female').value || 0);
+
+        payload.teachers = [];
+        document.querySelectorAll('#teachersContainer > div').forEach(row => {
+          const p = row.querySelector('.teacher-phone').value;
+          if (p && !checkPhone(p)) alert(`เบอร์ครู ${p} ไม่ถูกต้อง`);
+          payload.teachers.push({ name: row.querySelector('.teacher-name').value, phone: p });
+        });
+
+      } else if (category === '3.ศูนย์เด็กเล็ก') {
+        payload.name = document.getElementById('f_name') ? document.getElementById('f_name').value : '';
+        payload.c1 = document.getElementById('f_c1').value;
+        payload.c2 = document.getElementById('f_c2').value;
+        payload.c3 = document.getElementById('f_c3').value;
+        payload.male = Number(document.getElementById('f_male').value || 0);
+        payload.female = Number(document.getElementById('f_female').value || 0);
+        payload.teachers = [];
+        document.querySelectorAll('#teachersContainer > div').forEach(row => {
+          payload.teachers.push({ name: row.querySelector('.teacher-name').value, phone: row.querySelector('.teacher-phone').value });
+        });
+
+      } else if (category === '5.แผงลอย') {
+        payload.seller = document.getElementById('f_seller') ? document.getElementById('f_seller').value : '';
+        payload.products = document.getElementById('f_products') ? document.getElementById('f_products').value : '';
+
+      } else if (category === '6.ร้านอาหาร') {
+        payload.name = document.getElementById('f_name') ? document.getElementById('f_name').value : '';
+        payload.products = document.getElementById('f_products') ? document.getElementById('f_products').value : '';
+        payload.owner = document.getElementById('f_owner') ? document.getElementById('f_owner').value : '';
+        payload.phone = document.getElementById('f_phone') ? document.getElementById('f_phone').value : '';
+        if (!checkPhone(payload.phone)) {
+          alert('เบอร์โทรศัพท์ร้านอาหารไม่ถูกต้อง (ต้องเป็น 9-10 หลัก)');
+          return;
+        }
+
+      } else {
+        payload.name = document.getElementById('f_name') ? document.getElementById('f_name').value : '';
+        payload.owner = document.getElementById('f_owner') ? document.getElementById('f_owner').value : '';
+        payload.phone = document.getElementById('f_phone') ? document.getElementById('f_phone').value : '';
+        if (!checkPhone(payload.phone)) {
+          alert('เบอร์โทรศัพท์ไม่ถูกต้อง (ต้องเป็น 9-10 หลัก)');
+          return;
+        }
+      }
+
+      const btn = document.getElementById('btnSubmit');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึกลง Sheets...`;
+      }
+
+      google.script.run
+        .withSuccessHandler(res => {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> บันทึกลง Google Sheets`;
+          }
+          alert(res.message);
+          resetForm();
+          initApp();
+          switchTab('view');
+        })
+        .withFailureHandler(err => {
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> บันทึกลง Google Sheets`;
+          }
+          console.error("saveData Error:", err);
+          alert("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
+        })
+        .saveData(payload);
+    }
+
+    function resetForm() {
+      const form = document.getElementById('resourceForm');
+      if (form) form.reset();
+      const editId = document.getElementById('editRecordId');
+      const badge = document.getElementById('formModeBadge');
+      if (editId) editId.value = '';
+      if (badge) badge.innerText = "แบบฟอร์มเพิ่มข้อมูล";
+      const cat = document.getElementById('formCategory');
+      if (cat) renderFormFields(cat.value);
+    }
+
+    function fetchTableData() {
+      const cat = document.getElementById('viewCategoryFilter').value;
+      const village = document.getElementById('viewVillageFilter').value;
+
+      document.getElementById('tableHead').innerHTML = '';
+      document.getElementById('tableBody').innerHTML = '';
+      document.getElementById('tableLoading').classList.remove('hidden');
+      document.getElementById('tableEmpty').classList.add('hidden');
+
+      google.script.run
+        .withSuccessHandler(data => {
+          document.getElementById('tableLoading').classList.add('hidden');
+          currentCategoryData = data;
+          renderTable(data, cat);
+        })
+        .withFailureHandler(err => {
+          document.getElementById('tableLoading').classList.add('hidden');
+          console.error("fetchTableData Error:", err);
+          alert("ไม่สามารถโหลดข้อมูลตารางได้: " + err.message);
+        })
+        .getDataList(cat, village);
+    }
+
+    function renderTable(data, category) {
+      const thead = document.getElementById('tableHead');
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        document.getElementById('tableEmpty').classList.remove('hidden');
+        return;
+      }
+
+      const keys = Object.keys(data[0]);
+      let headHtml = '<tr><th class="p-3 text-center">จัดการ</th>';
+      keys.forEach(k => { headHtml += `<th class="p-3">${k}</th>`; });
+      headHtml += '</tr>';
+      thead.innerHTML = headHtml;
+
+      data.forEach(row => {
+        let tr = document.createElement('tr');
+        tr.className = 'hover:bg-sky-50/50 transition-colors';
+        const id = row['ID'];
+        let rowHtml = `
+          <td class="p-3 text-center whitespace-nowrap">
+            <button onclick="editItem('${category}', '${id}')" class="text-sky-600 hover:text-sky-800 mr-2 p-1"><i class="fa-solid fa-pen-to-square"></i></button>
+            <button onclick="deleteItem('${category}', '${id}')" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        `;
+        keys.forEach(k => { rowHtml += `<td class="p-3 whitespace-nowrap">${row[k] !== undefined ? row[k] : ''}</td>`; });
+        tr.innerHTML = rowHtml;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterTableRows() {
+      const q = document.getElementById('tableSearch').value.toLowerCase();
+      document.querySelectorAll('#tableBody tr').forEach(r => {
+        r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none';
+      });
+    }
+
+    function editItem(category, id) {
+      google.script.run
+        .withSuccessHandler(record => {
+          if (!record) return alert('ไม่พบข้อมูลที่ต้องการแก้ไข');
+          
+          document.getElementById('formCategory').value = category;
+          renderFormFields(category);
+          document.getElementById('editRecordId').value = id;
+          document.getElementById('formModeBadge').innerText = "แก้ไขข้อมูล ID: " + id;
+          document.getElementById('fieldVillage').value = record['หมู่บ้าน'] || '';
+
+          const addrElem = document.getElementById('f_address');
+          if (addrElem) {
+            addrElem.value = record['บ้านเลขที่/ที่อยู่วัด'] || record['บ้านเลขที่/ที่อยู่'] || record['บ้านเลขที่/ที่อยู่ผู้ขาย'] || record['บ้านเลขที่/ที่ตั้งร้าน'] || '';
+          }
+
+          if (category === '1.วัด') {
+            document.getElementById('f_name').value = record['ชื่อวัด/สำนักสงฆ์'] || '';
+            document.getElementById('f_monks').value = record['จำนวนพระ'] || 0;
+            document.getElementById('f_novices').value = record['จำนวนเณร'] || 0;
+            if (record.subItems) record.subItems.forEach(s => addMonkRow(s.name, s.age, s.role, s.phone, s.address));
+          } else if (category === '2.โรงเรียน') {
+            document.getElementById('f_name').value = record['ชื่อโรงเรียน'] || '';
+            document.getElementById('f_k1').value = record['อนุบาล 1'] || 0;
+            document.getElementById('f_k2').value = record['อนุบาล 2'] || 0;
+            document.getElementById('f_k3').value = record['อนุบาล 3'] || 0;
+            document.getElementById('f_p1').value = record['ป.1'] || 0;
+            document.getElementById('f_p2').value = record['ป.2'] || 0;
+            document.getElementById('f_p3').value = record['ป.3'] || 0;
+            document.getElementById('f_p4').value = record['ป.4'] || 0;
+            document.getElementById('f_p5').value = record['ป.5'] || 0;
+            document.getElementById('f_p6').value = record['ป.6'] || 0;
+            document.getElementById('f_m1').value = record['ม.1'] || 0;
+            document.getElementById('f_m2').value = record['ม.2'] || 0;
+            document.getElementById('f_m3').value = record['ม.3'] || 0;
+            document.getElementById('f_male').value = record['ชาย'] || 0;
+            document.getElementById('f_female').value = record['หญิง'] || 0;
+            if (record.teachers) record.teachers.forEach(t => addTeacherRow(t.name, t.phone));
+          } else if (category === '3.ศูนย์เด็กเล็ก') {
+            document.getElementById('f_name').value = record['ชื่อศูนย์พัฒนาเด็กเล็ก'] || '';
+            document.getElementById('f_c1').value = record['เตรียมอนุบาล/ชั้น 1'] || 0;
+            document.getElementById('f_c2').value = record['ชั้น 2'] || 0;
+            document.getElementById('f_c3').value = record['ชั้น 3'] || 0;
+            document.getElementById('f_male').value = record['ชาย'] || 0;
+            document.getElementById('f_female').value = record['หญิง'] || 0;
+            if (record.teachers) record.teachers.forEach(t => addTeacherRow(t.name, t.phone));
+          } else if (category === '4.ร้านค้า_ร้านชำ') {
+            document.getElementById('f_name').value = record['ชื่อร้านค้า/ร้านชำ'] || '';
+            document.getElementById('f_owner').value = record['เจ้าของ/ผู้ดูแล'] || '';
+            document.getElementById('f_phone').value = record['เบอร์โทรศัพท์'] || '';
+          } else if (category === '5.แผงลอย') {
+            document.getElementById('f_seller').value = record['ชื่อคนขาย/แม่ค้า'] || '';
+            document.getElementById('f_products').value = record['สินค้าที่ขาย/ขายอะไร'] || '';
+          } else if (category === '6.ร้านอาหาร') {
+            document.getElementById('f_name').value = record['ชื่อร้านอาหาร'] || '';
+            document.getElementById('f_products').value = record['ประเภทอาหารที่ขาย'] || '';
+            document.getElementById('f_owner').value = record['เจ้าของร้าน/ผู้ดูแล'] || '';
+            document.getElementById('f_phone').value = record['เบอร์โทรศัพท์'] || '';
+          } else if (category === '7.ร้านกาแฟ_คาเฟ่') {
+            document.getElementById('f_name').value = record['ชื่อร้านกาแฟ/คาเฟ่'] || '';
+            document.getElementById('f_owner').value = record['เจ้าของ/ผู้ดูแล'] || '';
+            document.getElementById('f_phone').value = record['เบอร์โทรศัพท์'] || '';
+          } else if (category === '8.ปั๊มน้ำมัน') {
+            document.getElementById('f_name').value = record['จุดที่ตั้ง/ชื่อสถานีปั๊ม'] || '';
+            document.getElementById('f_owner').value = record['เจ้าของ/ผู้ดูแล'] || '';
+            document.getElementById('f_phone').value = record['เบอร์โทรศัพท์'] || '';
+          } else if (category === '9.ร้านเสริมสวย') {
+            document.getElementById('f_name').value = record['ชื่อร้านเสริมสวย/ตัดผม'] || '';
+            document.getElementById('f_owner').value = record['เจ้าของ/ผู้ดูแล'] || '';
+            document.getElementById('f_phone').value = record['เบอร์โทรศัพท์'] || '';
+          }
+
+          switchTab('form');
+        })
+        .withFailureHandler(err => {
+          console.error("editItem Error:", err);
+          alert("ไม่สามารถดึงข้อมูลมาแก้ไขได้: " + err.message);
+        })
+        .getRecordDetail(category, id);
+    }
+
+    function deleteItem(category, id) {
+      if (!confirm(`คุณต้องการลบข้อมูล ID: ${id} ใช่หรือไม่?`)) return;
+      google.script.run
+        .withSuccessHandler(res => {
+          alert(res.message);
+          fetchTableData();
+          initApp();
+        })
+        .withFailureHandler(err => {
+          console.error("deleteItem Error:", err);
+          alert("ลบไม่สำเร็จ: " + err.message);
+        })
+        .deleteRecord(category, id);
+    }
+
+    function updateDashboardStats(stats) {
+      if (!stats) return;
+      const statElem = document.getElementById('statGrandTotal');
+      if (statElem) statElem.innerText = stats.grandTotal || 0;
+      if (stats.categoryCounts) {
+        Object.keys(stats.categoryCounts).forEach(cat => {
+          const el = document.getElementById(`count-${cat}`);
+          if (el) el.innerText = stats.categoryCounts[cat];
+        });
+      }
+    }
+
+    function loadSummaryData() {
+      google.script.run
+        .withSuccessHandler(stats => {
+          updateDashboardStats(stats);
+          renderMatrixTable(stats.matrix);
+          renderCharts(stats);
+        })
+        .withFailureHandler(err => {
+          console.error("loadSummaryData Error:", err);
+        })
+        .getSummaryStats();
+    }
+
+    function renderMatrixTable(matrix) {
+      const tbody = document.getElementById('matrixBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+      if (!matrix) return;
+
+      matrix.forEach(row => {
+        let tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-100';
+        let sum = 0;
+        let html = `<td class="p-2.5 font-bold text-left text-slate-800 bg-slate-50">${row[0]}</td>`;
+        for (let i = 1; i < row.length; i++) {
+          const val = Number(row[i] || 0);
+          sum += val;
+          html += `<td class="p-2 font-mono">${val}</td>`;
+        }
+        html += `<td class="p-2 font-bold font-mono bg-sky-100 text-sky-800">${sum}</td>`;
+        tr.innerHTML = html;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderCharts(stats) {
+      const barCanvas = document.getElementById('barChart');
+      const doughnutCanvas = document.getElementById('doughnutChart');
+      if (!barCanvas || !doughnutCanvas) return;
+
+      const barCtx = barCanvas.getContext('2d');
+      const villageTotals = stats.matrix.map(row => row.slice(1).reduce((a, b) => Number(a) + Number(b), 0));
+
+      if (barChartInstance) barChartInstance.destroy();
+      barChartInstance = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+          labels: VILLAGES.map(v => v.split(' ')[1] || v),
+          datasets: [{
+            label: 'จำนวนทรัพยากรรวม (แห่ง)',
+            data: villageTotals,
+            backgroundColor: '#38bdf8',
+            borderRadius: 12,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+
+      const doughnutCtx = doughnutCanvas.getContext('2d');
+      const catCounts = Object.values(stats.categoryCounts);
+
+      if (doughnutChartInstance) doughnutChartInstance.destroy();
+      doughnutChartInstance = new Chart(doughnutCtx, {
+        type: 'doughnut',
+        data: {
+          labels: CATEGORIES.map(c => c.split('.')[1]),
+          datasets: [{
+            data: catCounts,
+            backgroundColor: ['#0369a1', '#b45309', '#be185d', '#15803d', '#c2410c', '#b91c1c', '#4338ca', '#6b21a8', '#0f766e']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { font: { family: 'Prompt', size: 10 } } } }
+        }
+      });
+    }
+
+    function filterHomeCards() {
+      const qInput = document.getElementById('homeSearchInput');
+      if (!qInput) return;
+      const q = qInput.value.toLowerCase();
+      document.querySelectorAll('.category-card').forEach(card => {
+        card.style.display = card.innerText.toLowerCase().includes(q) ? '' : 'none';
+      });
+    }
+  </script>
+</body>
+</html>
